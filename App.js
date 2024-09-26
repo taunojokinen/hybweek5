@@ -19,16 +19,33 @@ const icons = {
 } 
 
 
-
 export default function App() {
   const [icon, setIcon] = useState(icons.location_not_known);
+
   const [location, setLocation] = useState({
-    latitude: 65.06,
+    latitude: 60.06,
     longitude: 25.41,
     latitudeDelta: 0.0922,
     longitudeDelta: 0.0421,
   });
 
+  const getUserPosition = async () => {
+    setIcon(icons.location_searching);
+    let{ status } = await Location.requestForegroundPermissionsAsync();
+    
+    try {
+      if (status !== 'granted') {
+          console.log('Permission to access location was denied');
+          return;
+      }
+      const position = await Location.getCurrentPositionAsync({accuracy: Location.Accuracy.High});
+      setLocation({...location, latitude: position.coords.latitude, longitude: position.coords.longitude, });
+      setIcon(icons.location_known);
+      } catch (error) {
+          console.log(error);
+      }   
+  }
+  
   return (
     <PaperProvider>
       <MainAppBar 
@@ -42,29 +59,15 @@ export default function App() {
       </SafeAreaView>
     </PaperProvider>
   );
-
-
-const getUserPosition = async () => {
-  let{ status } = await Location.requestForegroundPermissionsAsync();
-  
-  try {
-    if (status !== 'granted') {
-        console.log('Permission to access location was denied');
-        return;
-    }
-    const position = await Location.getCurrentPositionAsync({accuracy: Location.Accuracy.High});
-    setLocation({...location, latitude: position.coords.latitude, longitude: position.coords.longitude, });
-    } catch (error) {
-        console.log(error);
-    }
-  }
 }
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#fff',
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginTop: Platform.OS === 'android' ? Constants.statusBarHeight : 0,
-  },
+
+
+  const styles = StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: '#fff',
+      alignItems: 'center',
+      justifyContent: 'center',
+      marginTop: Platform.OS === 'android' ? Constants.statusBarHeight : 0,
+    },
 });
